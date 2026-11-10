@@ -68,14 +68,21 @@ git tag round/20251105-demo && git push origin round/20251105-demo
 
 ## 界面速览
 
-（首次部署后补图：4 张截图的捕获步骤与文件名约定见 `docs/截图清单.md`）
+构建参数页（三级级联，project/script/csvFile 联动）：
 
-<!-- 捕获后放入 docs/images/ 并取消对应注释：
 ![构建参数页（三级级联）](docs/images/build-parameters.png)
+
+报告中心 KPI 查看页（关键指标 + 构建信息 + 报告入口）：
+
 ![报告中心：KPI 查看页](docs/images/result-kpi.png)
-![报告中心：错误明细](docs/images/error-details.png)
+
+JMeter HTML 报告（`-e -o` 标准看板）：
+
+![JMeter HTML 报告](docs/images/jmeter-dashboard.png)
+
+发布式同步成功（`round/*` tag → 服务器单向镜像）：
+
 ![scripts-sync 发布成功](docs/images/sync-console.png)
--->
 
 ## 目录说明
 
