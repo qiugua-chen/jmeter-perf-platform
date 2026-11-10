@@ -1,0 +1,19 @@
+{
+  "comment": "被测端监控对象清单（样例，IP 为 RFC 5737 文档保留地址）。生产由运维 Prometheus 采集，本平台只读清单出报告——清单入仓随 round/* tag 发布，规划中的 resmon 模块将按此拉 query_range 数据出图。字段说明见 docs/部署指南.md",
+  "targets": [
+    {
+      "project": "demo-shop",
+      "env": "test",
+      "job": "node",
+      "instance": "192.0.2.10:9100",
+      "metrics": ["cpu_usage", "mem_usage", "disk_io"]
+    },
+    {
+      "project": "demo-shop",
+      "env": "test",
+      "job": "jvm",
+      "instance": "192.0.2.10:10000",
+      "metrics": ["heap_used", "gc_pause"]
+    }
+  ]
+}

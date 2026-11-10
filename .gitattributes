@@ -1,0 +1,3 @@
+# 统一 LF 行尾：运行目标为 Linux 容器，防止 Windows 工作区把 .sh 翻成 CRLF
+# 导致容器内执行报 "\r: command not found"
+* text=auto eol=lf

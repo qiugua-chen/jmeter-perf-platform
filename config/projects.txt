@@ -1,0 +1,15 @@
+# ============================================================
+# perf-platform 构建页 project 下拉的数据源（单一事实源）
+# - 每行一个项目名（与 scripts/performance/<项目>/ 目录名一致）
+# - # 开头为注释，空行忽略
+# - 首项空白为内置"强制人工选择"，无需在此填写
+# - 生效方式（二选一）：
+#   ① 改完重启容器：docker compose restart jenkins
+#      （init.groovy.d/30-seed-jobs.groovy 每次启动幂等同步下拉）
+#   ② 免重启：Manage Jenkins → Script Console 粘贴执行
+#      jenkins/update-projects.groovy（整表幂等设定，含变更前自校）
+# ============================================================
+
+# ---- demo 占位（部署后替换为你的项目清单）----
+demo-shop
+demo-order

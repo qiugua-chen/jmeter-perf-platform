@@ -1,0 +1,66 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 对应 docs/验证清单.md A 节的自动化：本仓库自身先吃自己的检查
+      - name: Shell 脚本静态检查
+        run: shellcheck scripts/*.sh
+
+      - name: Python 模块编译 + JSON 合法
+        run: |
+          python3 -m py_compile scripts/report-gen/*.py
+          python3 -m json.tool scripts/monitors/monitors.json > /dev/null
+
+      - name: JMX XML 良构
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          files = glob.glob('scripts/performance/**/*.jmx', recursive=True)
+          for f in files:
+              ET.parse(f)
+          print(f'JMX XML OK: {len(files)} 个文件')
+          PY
+
+      - name: Groovy 括号平衡（无容器环境下的轻量自检）
+        run: |
+          python3 - <<'PY'
+          import re
+          files = [
+              'jenkins/init.groovy.d/10-plugins.groovy',
+              'jenkins/init.groovy.d/20-admin-password.groovy',
+              'jenkins/init.groovy.d/30-seed-jobs.groovy',
+              'jenkins/update-projects.groovy',
+              'jenkins/seed-job.dsl',
+          ]
+          for f in files:
+              src = open(f, encoding='utf-8').read()
+              s = re.sub(r"'{3}.*?'{3}", "''", src, flags=re.S)
+              s = re.sub(r'"{3}.*?"{3}', '""', s, flags=re.S)
+              s = re.sub(r"'(?:\\.|[^'\\])*'", "''", s)
+              s = re.sub(r'"(?:\\.|[^"\\])*"', '""', s)
+              s = re.sub(r'/\*.*?\*/', '', s, flags=re.S)
+              s = re.sub(r'//[^\n]*', '', s)
+              for a, b in [('{', '}'), ('(', ')'), ('[', ']')]:
+                  assert s.count(a) == s.count(b), f'{f}: {a}{b} 不平衡'
+          print(f'Groovy 括号平衡 OK: {len(files)} 个文件')
+          PY
+
+      - name: Dockerfile 检查（hadolint，配置见 .hadolint.yaml）
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+      - name: compose 配置校验
+        run: docker compose -f docker-compose.yml config --quiet

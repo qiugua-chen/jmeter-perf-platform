@@ -1,0 +1,31 @@
+# 一体化容器：Jenkins + JMeter（对齐本平台"Jenkins 只作调用平台"的定位）
+services:
+  jenkins:
+    build: .                              # 根目录 Dockerfile：Jenkins + JMeter 5.6.3 一体化
+    image: jmeter-perf-platform:latest
+    container_name: perf-jenkins
+    ports:
+      - "8080:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # 运行时脚本目录（发布式同步的目标，对应容器内 /opt/jmeter/scripts）
+      - jmeter_scripts:/opt/jmeter/scripts
+      # 平台自身脚本（构建命令/同步脚本），任务构建时只读执行
+      - ./scripts:/opt/perf-platform:ro
+      # 项目清单数据源（构建页 project 下拉；改后重启容器，或跑 jenkins/update-projects.groovy 即时生效）
+      - ./config:/opt/perf-platform/config:ro
+      # 初始化钩子：装插件 + 改密 + 自动建任务（仅 jenkins_home 首次初始化时拷入，改动需 down -v 重建生效）
+      - ./jenkins/init.groovy.d:/usr/share/jenkins/ref/init.groovy.d:ro
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+      # 初始密码占位：首次启动强制修改，严禁使用弱密码
+      JENKINS_ADMIN_ID: ${JENKINS_ADMIN_ID:-admin}
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD:?请在 .env 设置强密码}
+      # 脚本仓库只读凭据：.env → 容器环境变量 → 构建 shell 继承 → scripts-sync.sh 消费（公库可留空并改 GIT_URL）
+      GIT_USER: ${GIT_USER:-git}
+      GIT_TOKEN: ${GIT_TOKEN:-}
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
+  jmeter_scripts:
