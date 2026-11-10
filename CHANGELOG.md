@@ -29,6 +29,7 @@
 - **文档与实现矛盾**：`GIT_TOKEN` 改为"用默认 GIT_URL 模板时必填，显式覆盖 GIT_URL 可留空"（此前 .env.example 标注"可选"但脚本硬退出）
 - **30-seed 等待偏紧**：uno-choice 就绪等待 3 分钟 → 8 分钟，超时提示补充"重启即自动补建"
 - **参数健壮性**：`duration` 必填正整数，`threads/ramp_up` 可空但填写必须是正整数（此前乱填会在算术处炸出难懂错误）
+- **CI 首跑 lint 对齐**：shellcheck SC2154（构建参数顶部集中声明默认值，消除"未赋值引用"）、hadolint DL4006×2/DL3006（SHELL 选项加 `-o pipefail`；DL3006 登记 .hadolint.yaml——行内 ignore 需紧贴指令行，脆弱）
 
 ### 变更
 
