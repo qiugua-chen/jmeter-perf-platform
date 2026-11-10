@@ -1,5 +1,8 @@
 # hadolint 配置
 # DL3008: apt 包不锁版本——基础镜像滚动更新，锁版本反而阻碍安全补丁跟进；
 #         可复现性由 JMETER_SHA512 双钉死承担（那才是构建的关键输入）
+# DL3006: 基础镜像版本经 ARG JENKINS_IMAGE 钉死（默认 jenkins/jenkins:lts-jdk17，
+#         升级走 --build-arg）；变量形式 FROM 无法被 hadolint 静态识别，规则在本仓库无增量价值
 ignored:
   - DL3008
+  - DL3006
