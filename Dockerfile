@@ -12,10 +12,13 @@
 # =============================================================================
 
 ARG JENKINS_IMAGE=jenkins/jenkins:lts-jdk17
+# hadolint ignore=DL3006 —— 版本经 ARG 钉死（默认 lts-jdk17；升级改 ARG 或 --build-arg），
+# 变量形式的 FROM 无法被 hadolint 静态识别，并非未锁版本
 FROM ${JENKINS_IMAGE}
 
-# RUN 内使用 bash（进程替换拆分镜像列表），需显式声明（默认 /bin/sh 不支持）
-SHELL ["/bin/bash", "-c"]
+# RUN 内使用 bash（进程替换拆分镜像列表）+ pipefail（多 RUN 块内嵌管道）；
+# 显式声明（默认 /bin/sh 不支持进程替换；pipefail 进 SHELL 选项免去逐块 set）
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG JMETER_VERSION=5.6.3
 # apache-jmeter-5.6.3.tgz 的 sha512（清华/阿里双镜像 2026-11 交叉验证一致）
