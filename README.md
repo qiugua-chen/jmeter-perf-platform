@@ -68,19 +68,37 @@ git tag round/20251105-demo && git push origin round/20251105-demo
 
 ## 界面速览
 
-构建参数页（三级级联，project/script/csvFile 联动）：
+按一次压测的完整执行顺序（配置 → 执行 → 报告 → 发布）：
+
+**① 任务主页**——使用说明、运行兜底、构建历史一览：
+
+![任务主页](docs/images/job-overview.png)
+
+**② 构建参数页**——project/script/csvFile 三级级联联动，空白默认强制全选：
 
 ![构建参数页（三级级联）](docs/images/build-parameters.png)
 
-报告中心 KPI 查看页（关键指标 + 构建信息 + 报告入口）：
+**③ 执行控制台**——JMeter 实时摘要 + 性能门禁结论（样本/错误率/RT/吞吐量 → PASS/FAIL）：
+
+![执行控制台与门禁结论](docs/images/build-console.png)
+
+**④ 构建页**——参数回显 + 侧边栏「报告中心 / JMeter HTML 报告」入口：
+
+![构建页](docs/images/build-overview.png)
+
+**⑤ 构建工件**——JMeter HTML 报告、原始 JTL、门禁结果 JSON 全部归档可下载：
+
+![构建工件归档](docs/images/build-artifacts.png)
+
+**⑥ 报告中心 KPI 页**——关键指标 + 构建信息 + 报告与数据入口：
 
 ![报告中心：KPI 查看页](docs/images/result-kpi.png)
 
-JMeter HTML 报告（`-e -o` 标准看板）：
+**⑦ JMeter HTML 报告**——`-e -o` 标准看板（APDEX / 统计 / 图表）：
 
 ![JMeter HTML 报告](docs/images/jmeter-dashboard.png)
 
-发布式同步成功（`round/*` tag → 服务器单向镜像）：
+**⑧ 发布式同步**——`round/*` tag → 服务器单向镜像，Finished: SUCCESS 即发布完成：
 
 ![scripts-sync 发布成功](docs/images/sync-console.png)
 
