@@ -21,6 +21,15 @@ set -uo pipefail
 : "${script:?未选择 script}"
 [ -z "${project}" ] && { echo "❌ 错误: 未选择项目"; exit 1; }
 [ -z "${script}" ]  && { echo "❌ 错误: 未选择脚本"; exit 1; }
+# 数值参数：duration 必填正整数（timeout 兜底依赖它）；threads/ramp_up 可空（脚本内
+# ${__P(threads,默认值)} 自带兜底），但填写则必须是正整数——乱填会在算术处炸出难懂错误
+[ -n "${duration:-}" ] || { echo "❌ 错误: 未填写 duration（压测时长秒数）"; exit 1; }
+for v in duration threads ramp_up; do
+    val="${!v:-}"
+    if [ -n "${val}" ] && ! [[ "${val}" =~ ^[0-9]+$ ]]; then
+        echo "❌ 错误: ${v} 必须为正整数（收到: '${val}'）"; exit 1
+    fi
+done
 
 # ---------- 1. CSV 规范化（三种合规写法归一） ----------
 csvFile=${csvFile:-}
@@ -61,4 +70,6 @@ python3 "${PLATFORM_DIR}/report-gen/error-details.py" result.jtl errors.html "�
 
 # ---------- 5. 门禁：错误率阈值 → FAILED ----------
 # 门禁即状态：FAILED 表示"未过质量线"，不等于"运行失败"——报告始终完整产出
-python3 "${PLATFORM_DIR}/report-gen/gate.py" result.jtl 0.5
+# 阈值环境变量可覆盖（任务/容器注入 GATE_ERR_MAX=1.5 即 1.5%）
+GATE_ERR_MAX="${GATE_ERR_MAX:-0.5}"
+python3 "${PLATFORM_DIR}/report-gen/gate.py" result.jtl "${GATE_ERR_MAX}"

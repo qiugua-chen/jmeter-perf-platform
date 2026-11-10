@@ -46,7 +46,8 @@ docker compose up -d
 # 2. 首次启动自动完成（init.groovy.d 钩子，日志验证：docker logs perf-jenkins | grep init.groovy.d）
 #    ① 装插件（uno-choice / parameterized-scheduler / job-dsl / git）
 #    ② admin 密码 = .env 的 JENKINS_ADMIN_PASSWORD（每次启动同步，重启改密只改 .env）
-#    ③ 自动建好 perf-platform / perf-scripts-sync 两个任务（含三级级联参数）
+#    ③ demo 资产自动种入 /opt/jmeter/scripts（零脚本状态下；happy path 无需手工拷贝）
+#    ④ 自动建好 perf-platform / perf-scripts-sync 两个任务（含三级级联参数）
 
 # 3. 打开 http://localhost:8080 → 把你的项目写进 config/projects.txt（每行一个，
 #    替换 demo-shop/demo-order）；重启容器生效，或 Script Console 跑
@@ -56,7 +57,9 @@ docker compose up -d
 git tag round/20251105-demo && git push origin round/20251105-demo
 ```
 
-> 注意：init 钩子仅在 jenkins_home 卷首次初始化时拷入容器；改钩子内容需 `docker compose down -v` 后重建（将清空 Jenkins 数据，仅首启调试期无妨）。
+> 注意 1：init 钩子仅在 jenkins_home 卷首次初始化时拷入容器；改钩子内容需 `docker compose down -v` 后重建（将清空 Jenkins 数据，仅首启调试期无妨）。
+>
+> 注意 2：30 号种子脚本每次启动都会把任务参数/构建步骤**同步为模板定义**——在 UI 手工添加的自定义参数会被覆盖；平台级自定义请改 `jenkins/init.groovy.d/30-seed-jobs.groovy` 后重启。
 
 > 海外网络构建：默认下载源按国内优化（apt / JMeter 安装包 / 插件管理器均清华、阿里云优先）。海外用户按网络情况覆盖即可，镜像列表为 ARG（空格分隔、按序尝试）：
 > ```bash
@@ -109,7 +112,7 @@ git tag round/20251105-demo && git push origin round/20251105-demo
 | `Dockerfile` | 一体化镜像：Jenkins + JMeter 5.6.3（版本/哈希双钉死、镜像源全部 ARG 可覆盖、预装插件管理器 + jpgc-casutg） |
 | `docker-compose.yml` | 容器编排：构建上述镜像 + 卷挂载（Jenkins home / 运行时脚本目录 / init 钩子） |
 | `jenkins/seed-job.dsl` | Job DSL 手动路径：生成 perf-platform 任务（自动建任务的备选） |
-| `jenkins/init.groovy.d/` | 首启钩子三件套：装插件（10）→ 改初始密码（20）→ 自动建任务含级联参数（30，project 清单读 config/projects.txt） |
+| `jenkins/init.groovy.d/` | 首启钩子四件套：装插件（10）→ 改初始密码（20）→ demo 资产种子（25，零脚本状态触发）→ 自动建任务含级联参数（30，project 清单读 config/projects.txt） |
 | `jenkins/update-projects.groovy` | 免重启维护 project 下拉（Script Console 粘贴执行；整表幂等，兼容 Jenkins ≥2.568 构造器变更） |
 | `config/projects.txt` | project 下拉数据源（单一事实源；# 注释，首项空白内置） |
 | `scripts/build-command.sh` | 构建命令模板（占位符化，核心交付物；报告/门禁调用 report-gen 独立模块） |

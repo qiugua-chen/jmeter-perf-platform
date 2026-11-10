@@ -35,8 +35,9 @@ final String PROJECTS_CONFIG = "${PLATFORM_DIR}/config/projects.txt"   // projec
 def jenkins = Jenkins.get()
 
 // ---------- 前置：等 uno-choice 动态加载完成（10-plugins.groovy 同 boot 内安装） ----------
+// 超时给到 8 分钟：国内网络装插件常超 3 分钟，超时后级联缺失且首启不重试，代价远高于多等
 def pm = jenkins.pluginManager
-long deadline = System.currentTimeMillis() + 3 * 60 * 1000
+long deadline = System.currentTimeMillis() + 8 * 60 * 1000
 while (System.currentTimeMillis() < deadline) {
     def uno = pm.getPlugin("uno-choice")
     if (uno != null && uno.isActive()) break
@@ -44,7 +45,7 @@ while (System.currentTimeMillis() < deadline) {
 }
 def uno = pm.getPlugin("uno-choice")
 if (uno == null || !uno.isActive()) {
-    println "init.groovy.d: ❌ uno-choice 插件未就绪，跳过级联参数创建。插件就绪后重跑本脚本，或按部署指南第 4 节手动补建"
+    println "init.groovy.d: ❌ uno-choice 插件未就绪，跳过级联参数创建。修复：重启容器（本脚本每次启动幂等重建），或按部署指南第 4 节手动补建"
     return
 }
 

@@ -10,9 +10,13 @@ WORK="${WORK:-/opt/jmeter/.sync/repo}"   # 容器内克隆工作副本（可用�
 TARGET="${TARGET:-/opt/jmeter/scripts}" # JMeter 运行时读取的目录（覆盖时须与构建命令 SCRIPTS_DIR 保持一致）
 
 # ---------- 凭据（GIT_TOKEN 环境变量注入；模板经 docker-compose .env → 容器环境传递） ----------
-# GIT_URL 可整体覆盖：适配 GitLab/自建 git/SSH 等任意远端（默认 gitee 风格 HTTPS）
-: "${GIT_TOKEN:?未注入 GIT_TOKEN 凭据}"
-GIT_URL="${GIT_URL:-https://${GIT_USER:-git}:${GIT_TOKEN}@git.example.com/group/perf-scripts.git}"
+# GIT_URL 可整体覆盖：适配 GitLab/自建 git/公网无凭据仓库等任意远端（默认 gitee 风格 HTTPS）。
+# 显式覆盖 GIT_URL 时无需 GIT_TOKEN；用默认模板地址时 GIT_TOKEN 必填（:? 快速失败）
+GIT_URL="${GIT_URL:-}"
+if [ -z "${GIT_URL}" ]; then
+    : "${GIT_TOKEN:?未注入 GIT_TOKEN 凭据（或显式设置 GIT_URL 覆盖默认模板地址）}"
+    GIT_URL="https://${GIT_USER:-git}:${GIT_TOKEN}@git.example.com/group/perf-scripts.git"
+fi
 
 # ---------- 1. 获取仓库 ----------
 mkdir -p "$(dirname "$WORK")"

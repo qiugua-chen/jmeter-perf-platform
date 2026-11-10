@@ -40,6 +40,7 @@ jobs:
           files = [
               'jenkins/init.groovy.d/10-plugins.groovy',
               'jenkins/init.groovy.d/20-admin-password.groovy',
+              'jenkins/init.groovy.d/25-seed-demo-assets.groovy',
               'jenkins/init.groovy.d/30-seed-jobs.groovy',
               'jenkins/update-projects.groovy',
               'jenkins/seed-job.dsl',
@@ -57,10 +58,35 @@ jobs:
           print(f'Groovy 括号平衡 OK: {len(files)} 个文件')
           PY
 
+      - name: 门禁模块功能冒烟（合成 JTL 断言退出码）
+        run: |
+          python3 - <<'PY'
+          import subprocess, sys, tempfile, os
+          jtl = ('timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,'
+                 'success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect\n'
+                 '1,10,a,200,OK,t,text,true,,1,1,1,1,http://x/,1,0,1\n'
+                 '2,20,b,500,ERR,t,text,false,boom,1,1,1,1,http://x/,1,0,1\n')
+          with tempfile.NamedTemporaryFile('w', suffix='.jtl', delete=False) as f:
+              f.write(jtl)
+              path = f.name
+          try:
+              rc_pass = subprocess.call([sys.executable, 'scripts/report-gen/gate.py', path, '50'])
+              rc_fail = subprocess.call([sys.executable, 'scripts/report-gen/gate.py', path, '1'])
+          finally:
+              os.unlink(path)
+          assert rc_pass == 0, f'阈值 50%% 应通过, 实际退出码 {rc_pass}'
+          assert rc_fail == 1, f'阈值 1%% 应失败, 实际退出码 {rc_fail}'
+          print('gate.py 冒烟 OK: 通过/未通过两态断言成立')
+          PY
+
       - name: Dockerfile 检查（hadolint，配置见 .hadolint.yaml）
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
 
+      # compose 的 JENKINS_ADMIN_PASSWORD 是 :? 强制插值，CI 无 .env → 注入 dummy 再校验
       - name: compose 配置校验
-        run: docker compose -f docker-compose.yml config --quiet
+        run: |
+          cp .env.example .env
+          echo "JENKINS_ADMIN_PASSWORD=ci-dummy-not-a-real-secret" >> .env
+          docker compose -f docker-compose.yml config --quiet
