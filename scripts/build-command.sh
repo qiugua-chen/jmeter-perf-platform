@@ -16,6 +16,16 @@
 # =============================================================================
 set -uo pipefail
 
+# Jenkins 以构建参数（环境变量）注入以下变量；此处集中声明默认值——
+# ① shellcheck 可静态追踪（SC2154：Jenkins 注入的变量在脚本内无赋值点）
+# ② 脱离 Jenkins 手工执行时行为可预期（SC2086 已由数组引用规避）
+project="${project:-}"
+script="${script:-}"
+threads="${threads:-}"
+duration="${duration:-}"
+ramp_up="${ramp_up:-}"
+csvFile="${csvFile:-}"
+
 # ---------- 0. 参数校验：无意义默认值即错误 ----------
 : "${project:?未选择 project}"
 : "${script:?未选择 script}"
