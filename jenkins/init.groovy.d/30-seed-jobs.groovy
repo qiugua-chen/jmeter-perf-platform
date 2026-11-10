@@ -170,7 +170,7 @@ println "init.groovy.d: perf-scripts-sync 就绪"
 
 // 定时调度按需追加（需 parameterized-scheduler，cron % key=value;key=value 格式），示例：
 //   perf.addTrigger(new org.jenkinsci.plugins.parameterizedscheduler.ParameterizedTimerTrigger(
-//       '0 2 * * * % is_nightly=true;project=demo-shop;script=demo.jmx;csvFile=null;threads=5;duration=300;ramp_up=30', null))
+//       '0 2 * * * % is_nightly=true;project=demo-shop;script=demo-shop.jmx;csvFile=users.csv;threads=5;duration=300;ramp_up=30', null))
 //   perf.save()
 
 println "init.groovy.d: 全部任务初始化完成（project 选项来自 config/projects.txt，缺失时回退 demo 占位）"

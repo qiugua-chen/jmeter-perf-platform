@@ -2,6 +2,8 @@
 
 基于 Jenkins + JMeter 的轻量级性能自动化平台——GitOps 脚本治理（tag 即发布）、参数化调度、门禁、报告中心、Prometheus 资源监控关联；AI 结果解读为规划中的增强模块。
 
+> **English TL;DR** — A lightweight, self-hosted performance-testing automation platform on Jenkins + JMeter in one Docker image. Opinionated script governance: only `round/*` tags sync to the test server (master commits never ship), cascading parameter dropdowns with blank-first enforcement, error-rate quality gates alongside full HTML reports, and a single-source project list for job parameters. Quick start: `cp .env.example .env && docker compose up -d`.
+
 > 关键取舍与踩坑要点已内联在各文件注释与部署指南中；深度技术文章规划中。
 
 ## 架构一览
@@ -31,6 +33,8 @@
 - **平台 vs 脚本分工**：线程组类型/节奏/内部参数以 JMX 脚本为准；平台只提供调度、传参（`${__P}` 约定）、门禁、报告、防跑飞兜底
 - **发布式同步**：只同步 `round/*` tag，master 日常提交不生效——tag 即"已评审可执行版本"，杜绝定时任务踩到半成品
 - **单向镜像**：仓库 → 服务器，服务器端仓库外文件自动清理；勿手工改服务器副本
+
+**版本约定**：本平台自身用语义化版本（`v1.0.0` 这样的 `v*` tag，见 CHANGELOG）；**你的脚本仓库**用 `round/*` 发布 tag（由 sync 任务消费）。两套 tag 互不混用——fork 本模板初始化自己的脚本仓库后，只对脚本仓库打 `round/*`，不要在本模板仓库打。
 
 ## 快速开始
 
@@ -62,6 +66,17 @@ git tag round/20251105-demo && git push origin round/20251105-demo
 >   --build-arg APT_MIRROR=""   # 置空 = 不改写 apt 源，保持 Debian 官方源
 > ```
 
+## 界面速览
+
+（首次部署后补图：4 张截图的捕获步骤与文件名约定见 `docs/截图清单.md`）
+
+<!-- 捕获后放入 docs/images/ 并取消对应注释：
+![构建参数页（三级级联）](docs/images/build-parameters.png)
+![报告中心：KPI 查看页](docs/images/result-kpi.png)
+![报告中心：错误明细](docs/images/error-details.png)
+![scripts-sync 发布成功](docs/images/sync-console.png)
+-->
+
 ## 目录说明
 
 | 路径 | 作用 |
@@ -79,7 +94,9 @@ git tag round/20251105-demo && git push origin round/20251105-demo
 | `.env.example` / `.gitignore` / `LICENSE` | 环境变量样例（变量名与 compose 插值一一对应）/ 版本控制排除项（含 .env）/ MIT |
 | `.github/workflows/ci.yml` | 静态检查 CI（shellcheck / py_compile / JMX XML / Groovy 括号平衡 / hadolint / compose 校验），即验证清单 A 节的自动化 |
 | `docs/部署指南.md` | 从零部署到首个压测的完整步骤 |
-| `docs/验证清单.md` | 下载者验收清单（A 静态检查 → F 防跑飞兜底，逐项勾选） |
+| `docs/验证清单.md` | 下载者验收清单（A→G 逐项勾选，A 节已由 CI 自动执行） |
+| `CONTRIBUTING.md` / `CHANGELOG.md` / `SECURITY.md` | 贡献指南（Issue/PR 约定 + 维护者仓库设置备忘）/ 版本记录 / 安全问题私密上报渠道 |
+| `docs/截图清单.md` | 界面截图捕获清单（README「界面速览」补图用） |
 
 ## 与传统方案的区别
 
@@ -90,6 +107,17 @@ git tag round/20251105-demo && git push origin round/20251105-demo
 | 报告 | 门禁即状态 + 报告中心（过程数据/错误样本/资源监控） | 只看 JMeter HTML 报告 |
 | 踩坑 | 已解决的坑内联在代码注释与部署指南（含 Jenkins ≥2.568 构造器变更兼容、XStream 静默丢弃防护） | 自己踩 |
 
+## Roadmap（规划中，欢迎共建）
+
+- **结果通知**：分级推送（构建执行失败即时报 / 门禁未过附错误 TopN / 通过静默）+ 夜间定时聚合晨报；落点：`report-gen/` 增加 notify 模块，密钥走容器环境变量
+- **资源监控出图（resmon）**：`scripts/monitors/monitors.json` 清单已就绪，按压测实际起止时间对齐 Prometheus `query_range`，资源曲线与 JMeter 吞吐/RT 叠图进 HTML 报告
+- **性能门禁多维化**：错误率之外增加 P95/P99 RT 基线（由近 N 次稳定构建滚动生成）与 TPS 下限
+- **AI 结果解读**：基于错误明细等结构化输出生成摘要（锚定数据防幻觉，标注为辅助结论，不替代人工判定）
+
+有想法欢迎开 Issue 讨论方向，再动手 PR——详见 `CONTRIBUTING.md`。
+
 ## License
 
 MIT（脱敏后的通用模板；不含任何公司业务数据）
+
+JMeter 与 Apache 相关名称是 Apache Software Foundation 的商标。本项目是独立开源作品，与 ASF 无隶属或背书关系。
