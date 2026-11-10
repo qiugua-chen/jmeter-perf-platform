@@ -12,8 +12,9 @@
 # =============================================================================
 
 ARG JENKINS_IMAGE=jenkins/jenkins:lts-jdk17
-# hadolint ignore=DL3006 —— 版本经 ARG 钉死（默认 lts-jdk17；升级改 ARG 或 --build-arg），
-# 变量形式的 FROM 无法被 hadolint 静态识别，并非未锁版本
+# hadolint ignore=DL3006
+# （原因：版本经 ARG 钉死——默认 lts-jdk17，升级改 ARG 或 --build-arg；
+#   变量形式的 FROM 无法被 hadolint 静态识别，并非未锁版本。下行行内注释会致豁免失效）
 FROM ${JENKINS_IMAGE}
 
 # RUN 内使用 bash（进程替换拆分镜像列表）+ pipefail（多 RUN 块内嵌管道）；
